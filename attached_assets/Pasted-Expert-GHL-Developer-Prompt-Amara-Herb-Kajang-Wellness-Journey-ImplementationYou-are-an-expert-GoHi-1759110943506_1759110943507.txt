@@ -1,0 +1,218 @@
+Expert GHL Developer Prompt: Amara Herb Kajang Wellness Journey ImplementationYou are an expert GoHighLevel (GHL) developer tasked with building a comprehensive, holistic wellness quiz and transformation journey for Amara Herb Kajang. This implementation must be done entirely within GHL's website builder using HTML, CSS, and JavaScript.Project Overview
+Build a multi-stage wellness assessment and transformation platform that:
+
+Captures user health data through an interactive quiz (Hair, Skin, Body, Mind)
+Processes uploaded images (scalp, face, full-body)
+Generates a 3D avatar showing current state with health metrics
+Morphs avatar into "Higher Self" transformation
+Presents personalized program recommendations
+Integrates subscription tiers with checkout
+Connects to app download and affiliate system
+Enables QR code tracking for GHL Voice Agent cold calling
+Critical Requirements1. Image Processing & Avatar Generation
+Current State Avatar:
+
+Accept 3 image uploads: scalp photo, face photo, full-body photo
+Generate 3D avatar that reflects quiz answers + image analysis
+Display health metrics chart below avatar showing:
+
+Dry % (skin hydration level)
+Oil % (sebum production level)
+Other relevant metrics based on quiz responses
+
+
+Avatar features:
+
+Face zoomed out to show full head and upper body
+Slow automatic rotation (360° over 10-15 seconds)
+Color-coded mesh overlay on body:
+
+RED zones: Critical weakness/concern areas
+YELLOW zones: Moderate concern areas
+GREEN zones: Healthy areas
+
+
+Mesh appears after all quiz questions are answered
+
+
+Higher Self Transformation:
+
+Morph current avatar into idealized version showing:
+
+Acne → Flawless, clear skin
+Wrinkles → Smooth, youthful skin
+Baldness/thinning → Luscious, full hair
+Obesity → Fit, healthy physique
+
+
+Smooth animation transition (3-5 seconds)
+Use nano-particle/molecular animation effect for the transformation
+2. Quiz Flow StructureSection 1: Hair Assessment
+
+Primary health question
+Hair fall/thinning (with conditional: duration if yes)
+Scalp issues (with conditional: frequency if yes)
+Greying/elasticity concerns
+Image Upload: Scalp photo with dotted alignment guide
+Section 2: Skin Assessment
+
+Primary concern identification
+Skin type characterization
+Specific conditions (with conditional: dermatologist consultation)
+Texture and radiance
+Image Upload: Face photo with facial feature alignment guide
+Section 3: Body Assessment
+
+Physical discomfort identification (with conditional: location specification)
+Energy levels
+Physical goals (multiple selection)
+Image Upload: Full-body photo with standing posture guide
+Section 4: Mind Assessment
+
+Stress/anxiety frequency (with conditional: trigger identification)
+Sleep quality (with conditional: specific challenges)
+Focus and mental clarity
+Data Collection: Name, Age, Email, Phone, Location
+3. Report & Conversion SequenceAfter Quiz Completion:
+
+Show 3D Avatar with health metrics and color mesh
+Testimonials Section: Before/after transformations from "Reverse Aging Programme"
+Programme Features: Highlight benefits of highest tier
+Application Form: "Apply to Join" with annual payment emphasis
+Programme Tiers:
+
+Tier 1 (Highest): Annual payment only, full features
+Tier 2 (Mid): If rejected from Tier 1, show budget annual option
+Tier 3 (Basic): Monthly subscription auto-slider
+
+
+Programme Customization:
+
+Personalized programme builder (like configuring a car)
+Checkboxes to include/exclude specific services
+Real-time price adjustment
+
+
+Checkout:
+
+Countdown timer for bonus expiry
+"Download App" CTA button
+Payment integration
+
+
+4. GHL Integration RequirementsVoice Agent Integration:
+
+Generate unique QR codes for each quiz entry
+QR codes must track:
+
+User ID
+Entry timestamp
+Quiz responses
+Contact information (phone, email)
+
+
+Store all data in GHL custom fields
+Trigger GHL workflow upon QR scan to:
+
+Add contact to pipeline
+Tag appropriately based on concerns identified
+Enable Voice Agent cold calling sequence
+
+
+GHL Custom Fields Needed:
+
+Hair Health Score
+Skin Health Score
+Body Health Score
+Mind Health Score
+Primary Concerns (comma-separated)
+Programme Tier Interest
+Avatar Current State URL
+Avatar Higher Self URL
+Image Upload URLs (scalp, face, body)
+Dry Percentage
+Oil Percentage
+5. Technical Implementation Notes3D Avatar Engine:
+
+Use Three.js for 3D rendering
+Implement WebGL for performance
+Handle image-to-3D conversion client-side or via API
+Cache generated avatars for performance
+Image Analysis:
+
+Client-side pre-processing for alignment check
+Compress images before upload (max 2MB per image)
+Store securely with privacy compliance
+Branching Logic:
+
+Implement conditional questions using JavaScript
+Store all responses in sessionStorage during quiz
+Submit complete payload at end
+Animations:
+
+CSS transitions for smooth UI changes
+Three.js animation mixer for avatar morph
+Particle system for nano-banana transformation effect
+Performance:
+
+Lazy load 3D avatar components
+Optimize images (WebP format)
+Minimize JavaScript bundle size
+Implement loading states
+6. Affiliate System
+
+Auto-register user as affiliate after subscription
+Generate unique referral link
+Dashboard showing:
+
+Referrals count
+Commissions (1% lifetime)
+Badges (Bronze → Platinum)
+Leaderboard position
+
+
+7. Mobile Responsiveness
+
+Fully responsive design (mobile-first)
+Touch-friendly controls for avatar rotation
+Optimized camera access for image uploads
+Simplified UI for smaller screens
+Deliverables RequiredPlease provide complete, production-ready code including:
+HTML Structure - Semantic, accessible markup for entire quiz flow
+CSS Styling - Modern, Amara-branded design matching holistic wellness aesthetic
+JavaScript Logic - All functionality including:
+
+Quiz branching logic
+Image upload and validation
+3D avatar generation and animation
+Health metrics calculation and chart display
+Form validation
+GHL API integration
+Timer functionality
+Payment integration hooks
+
+
+
+GHL Configuration Guide - Step-by-step instructions for:
+
+Custom field setup
+Workflow configuration for Voice Agent
+QR code generation and tracking
+Payment gateway integration
+
+
+
+API Integration Code - If using external services for:
+
+Image processing/AI analysis
+3D avatar generation
+Claude API for personalized recommendations
+
+
+
+Documentation - Include:
+
+Code comments
+Setup instructions
+Testing procedures
+Troubleshooting guide
