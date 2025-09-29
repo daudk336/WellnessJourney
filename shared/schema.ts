@@ -44,7 +44,7 @@ export const quizResponses = pgTable("quiz_responses", {
   physicalDiscomfort: text("physical_discomfort"),
   discomfortLocation: text("discomfort_location"),
   energyLevels: text("energy_levels"),
-  physicalGoals: jsonb("physical_goals"),
+  physicalGoals: text("physical_goals"),
   bodyImageUrl: text("body_image_url"),
   
   // Mind Assessment

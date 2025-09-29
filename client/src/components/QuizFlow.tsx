@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import QuizProgress from './QuizProgress';
 import QuizQuestion, { Question } from './QuizQuestion';
 import ImageUpload from './ImageUpload';
+import { wellnessAPI } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
 
 //todo: remove mock functionality - replace with real quiz data
 const quizSections = [
@@ -290,16 +292,19 @@ const quizSections = [
 ];
 
 interface QuizFlowProps {
-  onQuizComplete: (responses: any) => void;
+  onQuizComplete: (responses: any, healthMetrics: any, quizId: string) => void;
   onBack: () => void;
 }
 
 export default function QuizFlow({ onQuizComplete, onBack }: QuizFlowProps) {
+  const { toast } = useToast();
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [responses, setResponses] = useState<Record<string, any>>({});
   const [conditionalResponses, setConditionalResponses] = useState<Record<string, any>>({});
   const [uploadedImages, setUploadedImages] = useState<Record<string, string>>({});
+  const [uploadedImageUrls, setUploadedImageUrls] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const currentSection = quizSections[currentSectionIndex];
   const currentQuestion = currentSection.questions[currentQuestionIndex];
@@ -328,9 +333,10 @@ export default function QuizFlow({ onQuizComplete, onBack }: QuizFlowProps) {
     setConditionalResponses(prev => ({ ...prev, [`${questionId}_conditional`]: value }));
   };
 
-  const handleImageUpload = (type: string, file: File) => {
-    const imageUrl = URL.createObjectURL(file);
-    setUploadedImages(prev => ({ ...prev, [type]: imageUrl }));
+  const handleImageUpload = (type: string, file: File, serverUrl: string) => {
+    const localUrl = URL.createObjectURL(file);
+    setUploadedImages(prev => ({ ...prev, [type]: localUrl }));
+    setUploadedImageUrls(prev => ({ ...prev, [type]: serverUrl }));
   };
 
   const canProceed = () => {
@@ -345,7 +351,7 @@ export default function QuizFlow({ onQuizComplete, onBack }: QuizFlowProps) {
     return true;
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     const isLastQuestionInSection = currentQuestionIndex >= currentSection.questions.length + 2; // +3 for images, -1 for index
     
     if (isLastQuestionInSection) {
@@ -353,13 +359,76 @@ export default function QuizFlow({ onQuizComplete, onBack }: QuizFlowProps) {
         setCurrentSectionIndex(currentSectionIndex + 1);
         setCurrentQuestionIndex(0);
       } else {
-        // Quiz complete
-        const allResponses = {
-          ...responses,
-          ...conditionalResponses,
-          uploadedImages
-        };
-        onQuizComplete(allResponses);
+        // Quiz complete - submit to backend
+        setIsSubmitting(true);
+        
+        try {
+          const quizData = {
+            // Personal info
+            name: responses.name,
+            age: responses.age,
+            email: responses.email,
+            phone: responses.phone,
+            location: responses.location,
+            
+            // Hair responses
+            hairFall: responses.hair_fall,
+            hairFallDuration: conditionalResponses.hair_fall_conditional,
+            scalpIssues: responses.scalp_issues,
+            scalpIssueFrequency: conditionalResponses.scalp_issues_conditional,
+            greyingConcerns: responses.hair_primary === 'greying' ? 'yes' : 'no',
+            scalpImageUrl: uploadedImageUrls.scalp,
+            
+            // Skin responses
+            skinConcern: responses.skin_concern,
+            skinType: responses.skin_type,
+            skinConditions: JSON.stringify(responses.skin_conditions || []),
+            dermatologistConsult: 'no', // Default value
+            skinTexture: 'normal', // Default value
+            faceImageUrl: uploadedImageUrls.face,
+            
+            // Body responses
+            physicalDiscomfort: responses.physical_discomfort,
+            discomfortLocation: JSON.stringify(conditionalResponses.physical_discomfort_conditional || []),
+            energyLevels: responses.energy_levels,
+            physicalGoals: JSON.stringify(responses.physical_goals || []),
+            bodyImageUrl: uploadedImageUrls.body,
+            
+            // Mind responses
+            stressFrequency: responses.stress_frequency,
+            stressTriggers: JSON.stringify(conditionalResponses.stress_frequency_conditional || []),
+            sleepQuality: responses.sleep_quality,
+            sleepChallenges: JSON.stringify(conditionalResponses.sleep_quality_conditional || []),
+            mentalClarity: responses.mental_clarity
+          };
+          
+          const response = await wellnessAPI.submitQuiz(quizData);
+          
+          if (response.success) {
+            toast({
+              title: "Assessment Complete!",
+              description: "Your wellness analysis has been processed successfully.",
+            });
+            
+            onQuizComplete(
+              { ...responses, ...conditionalResponses, uploadedImages },
+              response.data.healthMetrics,
+              response.data.id
+            );
+          } else {
+            throw new Error('Quiz submission failed');
+          }
+          
+        } catch (error) {
+          console.error('Quiz submission error:', error);
+          toast({
+            title: "Submission Error",
+            description: "Failed to submit your assessment. Please try again.",
+            variant: "destructive"
+          });
+        } finally {
+          setIsSubmitting(false);
+        }
       }
     } else {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
@@ -404,9 +473,15 @@ export default function QuizFlow({ onQuizComplete, onBack }: QuizFlowProps) {
           description={imageConfig?.description || ''}
           alignmentGuide={imageConfig?.alignmentGuide}
           uploadedImage={uploadedImages[imageType]}
-          onImageUpload={(file) => handleImageUpload(imageType, file)}
+          imageType={imageType as 'scalp' | 'face' | 'body'}
+          onImageUpload={(file, url) => handleImageUpload(imageType, file, url)}
           onImageRemove={() => {
             setUploadedImages(prev => {
+              const updated = { ...prev };
+              delete updated[imageType];
+              return updated;
+            });
+            setUploadedImageUrls(prev => {
               const updated = { ...prev };
               delete updated[imageType];
               return updated;
@@ -474,12 +549,21 @@ export default function QuizFlow({ onQuizComplete, onBack }: QuizFlowProps) {
           
           <Button 
             onClick={handleNext}
-            disabled={!canProceed()}
+            disabled={!canProceed() || isSubmitting}
             data-testid="button-quiz-next"
           >
-            {currentSectionIndex === quizSections.length - 1 && 
-             currentQuestionIndex >= currentSection.questions.length + 2 ? 'Complete Assessment' : 'Continue'}
-            <ChevronRight className="w-4 h-4 ml-2" />
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              <>
+                {currentSectionIndex === quizSections.length - 1 && 
+                 currentQuestionIndex >= currentSection.questions.length + 2 ? 'Complete Assessment' : 'Continue'}
+                <ChevronRight className="w-4 h-4 ml-2" />
+              </>
+            )}
           </Button>
         </div>
       </div>

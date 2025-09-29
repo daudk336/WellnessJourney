@@ -21,6 +21,7 @@ interface QuizResults {
     bodyHealth: number;
     mindHealth: number;
   };
+  quizId: string;
 }
 
 export default function Home() {
@@ -32,20 +33,11 @@ export default function Home() {
     setAppState('quiz');
   };
 
-  const handleQuizComplete = (responses: any) => {
-    //todo: remove mock functionality - calculate real health metrics from responses
-    const mockHealthMetrics = {
-      dryPercentage: 65,
-      oilPercentage: 35,
-      hairHealth: Math.floor(Math.random() * 40) + 30, // 30-70
-      skinHealth: Math.floor(Math.random() * 40) + 40, // 40-80
-      bodyHealth: Math.floor(Math.random() * 40) + 50, // 50-90
-      mindHealth: Math.floor(Math.random() * 40) + 35  // 35-75
-    };
-
+  const handleQuizComplete = (responses: any, healthMetrics: any, quizId: string) => {
     setQuizResults({
       responses,
-      healthMetrics: mockHealthMetrics
+      healthMetrics,
+      quizId
     });
     setAppState('results');
   };

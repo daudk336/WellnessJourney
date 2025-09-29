@@ -113,8 +113,10 @@ export default function Avatar3D({
           return prev + 2;
         });
       }, 50);
+      
+      return () => clearInterval(interval);
     }
-  }, [showTransformation, onTransformationComplete]);
+  }, [showTransformation, onTransformationComplete, isTransforming]);
 
   const getHealthColor = (healthScore: number): string => {
     if (healthScore < 30) return '#ef4444'; // Red - critical

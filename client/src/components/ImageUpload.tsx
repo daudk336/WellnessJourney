@@ -1,11 +1,12 @@
 import { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Card, CardContent } from "@/components/ui/card";
-import { Upload, X, Camera } from 'lucide-react';
+import { Upload, X, Camera, Loader2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
+import { wellnessAPI } from '@/lib/api';
 
 interface ImageUploadProps {
-  onImageUpload: (file: File) => void;
+  onImageUpload: (file: File, url: string) => void;
   onImageRemove?: () => void;
   uploadedImage?: string;
   title: string;
@@ -13,6 +14,7 @@ interface ImageUploadProps {
   alignmentGuide?: string;
   accept?: string;
   maxSize?: number;
+  imageType: 'scalp' | 'face' | 'body';
 }
 
 export default function ImageUpload({
@@ -23,11 +25,13 @@ export default function ImageUpload({
   description,
   alignmentGuide = "Position yourself according to the guide lines",
   accept = "image/*",
-  maxSize = 2097152 // 2MB
+  maxSize = 2097152, // 2MB
+  imageType
 }: ImageUploadProps) {
   const [error, setError] = useState<string>("");
+  const [isUploading, setIsUploading] = useState(false);
 
-  const onDrop = useCallback((acceptedFiles: File[], rejectedFiles: any[]) => {
+  const onDrop = useCallback(async (acceptedFiles: File[], rejectedFiles: any[]) => {
     setError("");
     
     if (rejectedFiles.length > 0) {
@@ -41,13 +45,24 @@ export default function ImageUpload({
     }
     
     if (acceptedFiles.length > 0) {
-      onImageUpload(acceptedFiles[0]);
+      const file = acceptedFiles[0];
+      setIsUploading(true);
+      
+      try {
+        const response = await wellnessAPI.uploadImage(file, imageType);
+        onImageUpload(file, response.data.url);
+      } catch (err) {
+        console.error('Upload failed:', err);
+        setError(err instanceof Error ? err.message : 'Upload failed');
+      } finally {
+        setIsUploading(false);
+      }
     }
-  }, [onImageUpload]);
+  }, [onImageUpload, imageType]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: { [accept.split('/')[0]]: [`.${accept.split('/')[1]}`] },
+    accept: { 'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp'] },
     maxSize,
     multiple: false
   });
@@ -99,7 +114,9 @@ export default function ImageUpload({
           <CardContent className="p-8 text-center">
             <input {...getInputProps()} />
             <div className="space-y-4">
-              {isDragActive ? (
+              {isUploading ? (
+                <Loader2 className="w-12 h-12 mx-auto text-primary animate-spin" />
+              ) : isDragActive ? (
                 <Upload className="w-12 h-12 mx-auto text-primary animate-bounce" />
               ) : (
                 <Camera className="w-12 h-12 mx-auto text-muted-foreground" />
@@ -107,7 +124,7 @@ export default function ImageUpload({
               
               <div>
                 <p className="text-lg font-medium text-foreground mb-2">
-                  {isDragActive ? 'Drop your image here' : 'Upload Your Photo'}
+                  {isUploading ? 'Uploading...' : isDragActive ? 'Drop your image here' : 'Upload Your Photo'}
                 </p>
                 <p className="text-sm text-muted-foreground">
                   Drag & drop or click to browse
